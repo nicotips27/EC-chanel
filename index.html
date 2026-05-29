@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC Chanel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Librería necesaria para decodificar transmisiones en vivo (HLS) -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        /* Estilos personalizados para la barra de desplazamiento */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #71717a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1aa;
+        }
+
+        /* Animación de la pantalla de carga */
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; visibility: visible; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        /* Ocultar input de archivo real */
+        #folder-input {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#0f0f0f] text-white font-sans h-screen overflow-hidden flex flex-col">
+
+    <!-- PANTALLA DE CARGA -->
+    <div id="loading-screen" class="fixed inset-0 z-50 bg-[#0f0f0f] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative rounded-full pulse-glow mb-6 bg-black/50 p-4">
+            <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" 
+                 alt="EC Chanel Logo" 
+                 class="w-32 h-32 object-contain rounded-full">
+        </div>
+        <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 bg-red-600 rounded-full animate-bounce"></div>
+            <div class="w-3 h-3 bg-red-600 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-3 h-3 bg-red-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+        </div>
+        <h1 class="text-2xl font-bold mt-4 tracking-wider">EC CHANEL</h1>
+    </div>
+
+    <!-- NAVEGACIÓN SUPERIOR -->
+    <header class="flex items-center justify-between px-4 py-2 h-16 bg-[#0f0f0f] sticky top-0 z-40 border-b border-[#272727]">
+        <!-- Logo y Menú -->
+        <div class="flex items-center gap-4">
+            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+            <div class="flex items-center gap-1 cursor-pointer" onclick="goHome()">
+                <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" 
+                     alt="Logo" class="w-8 h-8 object-contain rounded-full">
+                <span class="text-xl font-bold tracking-tighter">EC Chanel</span>
+            </div>
+        </div>
+
+        <!-- Barra de Búsqueda -->
+        <div class="hidden md:flex flex-1 max-w-2xl items-center ml-8">
+            <div class="flex w-full items-center bg-[#121212] border border-[#303030] rounded-l-full px-4 py-0.5 focus-within:border-blue-500 ml-10">
+                <i data-lucide="search" class="w-5 h-5 text-gray-400 mr-2"></i>
+                <input type="text" id="search-input" placeholder="Buscar en todos los videos..." class="w-full bg-transparent border-none outline-none py-2 text-white placeholder-gray-400">
+            </div>
+            <button id="search-btn" class="bg-[#222222] border border-l-0 border-[#303030] px-5 py-2.5 rounded-r-full hover:bg-[#303030] transition-colors">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </button>
+            <button class="ml-4 p-2.5 bg-[#181818] hover:bg-[#303030] rounded-full transition-colors">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Iconos de Usuario y Carga -->
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Botón para cargar carpeta local -->
+            <label for="folder-input" class="flex items-center gap-2 cursor-pointer bg-[#272727] hover:bg-[#3f3f3f] px-4 py-2 rounded-full transition-colors text-sm font-medium">
+                <i data-lucide="folder-open" class="w-5 h-5"></i>
+                <span class="hidden sm:inline">Cargar Carpeta</span>
+            </label>
+            <input type="file" id="folder-input" webkitdirectory directory multiple accept="video/*">
+
+            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors hidden sm:block">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+            </button>
+            <button class="p-1">
+                <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" alt="User" class="w-8 h-8 rounded-full border border-[#272727]">
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Barra lateral (Desktop) -->
+        <aside class="w-20 lg:w-64 flex-shrink-0 bg-[#0f0f0f] flex flex-col items-center lg:items-stretch py-4 overflow-y-auto hidden sm:flex border-r border-[#272727]">
+            <a href="#" onclick="goHome()" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 bg-[#272727]">
+                <i data-lucide="home" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
+                <span class="text-[10px] lg:text-sm font-medium">Inicio</span>
+            </a>
+            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
+                <i data-lucide="compass" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
+                <span class="text-[10px] lg:text-sm">Explorar</span>
+            </a>
+            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
+                <i data-lucide="play-square" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
+                <span class="text-[10px] lg:text-sm">Suscripciones</span>
+            </a>
+            <hr class="border-[#272727] my-3 w-full hidden lg:block">
+            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
+                <i data-lucide="library" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
+                <span class="text-[10px] lg:text-sm">Biblioteca</span>
+            </a>
+        </aside>
+
+        <!-- Área Principal (Dinámica) -->
+        <main class="flex-1 overflow-y-auto bg-[#0f0f0f] relative" id="main-content">
+            
+            <!-- VISTA DE INICIO (Contenedor de categorías) -->
+            <div id="home-view" class="p-4 md:p-6 flex flex-col w-full">
+                <!-- Las categorías y videos de inicio se inyectarán aquí -->
+            </div>
+
+            <!-- VISTA DE REPRODUCCIÓN (Oculta por defecto) -->
+            <div id="watch-view" class="hidden p-4 md:p-6 lg:gap-6 w-full">
+                
+                <!-- SECCIÓN DEL REPRODUCTOR PRINCIPAL -->
+                <div id="video-layout-wrapper" class="lg:w-[65%] xl:w-[70%] flex-shrink-0 mb-8 lg:mb-0">
+                    
+                    <!-- CONTENEDOR DEL REPRODUCTOR (Movible para minimizar) -->
+                    <div id="player-container" class="w-full bg-black rounded-xl overflow-hidden aspect-video relative group transition-all duration-300">
+                        <video id="main-player" class="w-full h-full object-contain" controls>
+                            <source src="" type="video/mp4">
+                            Tu navegador no soporta el formato de video.
+                        </video>
+                        
+                        <!-- Botones principales (solo en modo expandido) -->
+                        <div id="main-player-controls" class="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="minimizePlayer(event)" class="p-2 bg-black/70 text-white rounded-full hover:bg-black/90 tooltip" title="Minimizar reproductor">
+                                <i data-lucide="minimize-2" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="closePlayer(event)" class="p-2 bg-black/70 text-white rounded-full hover:bg-black/90 hover:text-red-500 tooltip" title="Cerrar reproductor">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        <!-- Controles del mini-reproductor (solo en modo minimizado) -->
+                        <div id="mini-controls" class="hidden absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="maximizePlayer(event)" class="p-1.5 bg-black/70 text-white rounded hover:bg-black/90" title="Expandir">
+                                <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="closePlayer(event)" class="p-1.5 bg-black/70 text-white rounded hover:bg-black/90 hover:text-red-500" title="Cerrar">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Capa invisible para expandir al hacer clic en el mini-reproductor -->
+                        <div id="mini-click-layer" class="hidden absolute inset-0 z-10 cursor-pointer" onclick="maximizePlayer(event)"></div>
+                    </div>
+
+                    <!-- Info del Video -->
+                    <div class="mt-4">
+                        <h1 id="video-title" class="text-xl md:text-2xl font-bold line-clamp-2 text-white"></h1>
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-3 gap-4">
+                            <div class="flex items-center gap-3">
+                                <!-- Avatar dinámico del canal -->
+                                <img id="video-channel-avatar" src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" 
+                                     class="w-10 h-10 rounded-full object-cover">
+                                <div>
+                                    <!-- Nombre dinámico del canal/carpeta -->
+                                    <h3 id="video-channel" class="font-bold text-base">Cargando...</h3>
+                                    <!-- Suscriptores/Tipo de archivo dinámico -->
+                                    <p id="video-channel-subs" class="text-sm text-gray-400">...</p>
+                                </div>
+                                <button class="bg-white text-black font-semibold px-4 py-2 rounded-full ml-2 hover:bg-gray-200 transition-colors">
+                                    Suscribirse
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="flex bg-[#272727] rounded-full overflow-hidden">
+                                    <button class="flex items-center gap-2 px-4 py-2 hover:bg-[#3f3f3f] border-r border-[#3f3f3f] transition-colors">
+                                        <i data-lucide="thumbs-up" class="w-5 h-5"></i>
+                                        <span class="text-sm font-medium">124K</span>
+                                    </button>
+                                    <button class="px-4 py-2 hover:bg-[#3f3f3f] transition-colors">
+                                        <i data-lucide="thumbs-down" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                                <button class="flex items-center gap-2 px-4 py-2 bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors font-medium">
+                                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                                    <span class="hidden sm:inline">Compartir</span>
+                                </button>
+                                <button class="p-2 bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors">
+                                    <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Caja de descripción -->
+                    <div class="bg-[#272727] rounded-xl p-3 mt-4 hover:bg-[#3f3f3f] transition-colors cursor-pointer">
+                        <p class="text-sm font-medium mb-1"><span id="video-views"></span> • <span id="video-date"></span></p>
+                        <p id="video-desc" class="text-sm text-gray-200 line-clamp-2">
+                            Esta es la plataforma EC Chanel. Explorando el contenido más reciente de la red y tus carpetas locales.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DE RECOMENDACIONES (La "Carpeta") -->
+                <div class="lg:w-[35%] xl:w-[30%] flex-col gap-3 flex" id="recommendations-container">
+                    <h3 class="font-bold text-lg mb-2 lg:hidden">Siguiente</h3>
+                    <!-- Los videos se inyectarán aquí mediante JS -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Inicializar iconos de Lucide
+        lucide.createIcons();
+
+        // Lógica de la Pantalla de Carga
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 2500);
+        });
+
+        // Estado de la aplicación
+        let videoList = [];
+        let isMinimized = false;
+        let hls = null; // Instancia de HLS.js para transmisiones en vivo
+
+        // Referencias del DOM
+        const folderInput = document.getElementById('folder-input');
+        const homeView = document.getElementById('home-view');
+        const watchView = document.getElementById('watch-view');
+        const recommendationsContainer = document.getElementById('recommendations-container');
+        
+        // Elementos del reproductor
+        const playerContainer = document.getElementById('player-container');
+        const videoLayoutWrapper = document.getElementById('video-layout-wrapper');
+        const mainPlayer = document.getElementById('main-player');
+        const mainPlayerControls = document.getElementById('main-player-controls');
+        const miniControls = document.getElementById('mini-controls');
+        const miniClickLayer = document.getElementById('mini-click-layer');
+        
+        // Textos del reproductor
+        const elTitle = document.getElementById('video-title');
+        const elChannel = document.getElementById('video-channel');
+        const elViews = document.getElementById('video-views');
+        const elDate = document.getElementById('video-date');
+        const elChannelAvatar = document.getElementById('video-channel-avatar');
+        const elChannelSubs = document.getElementById('video-channel-subs');
+
+        // Cargar videos online completos
+        async function loadOnlineVideos() {
+            homeView.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div><p>Cargando videos online...</p></div>`;
+            
+            // Simulamos el tiempo de respuesta de una red
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            // Canales en vivo libres (IPTV público / HLS)
+            const liveStreams = [
+                { id: 'live1', title: 'NASA TV - Transmisión Oficial', url: 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8', channel: 'NASA', views: '24K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', type: 'live' },
+                { id: 'live2', title: 'Red Bull TV - Deportes', url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8', channel: 'Red Bull', views: '12K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80', type: 'live' },
+                { id: 'live3', title: 'DW Noticias - Español', url: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8', channel: 'DW Español', views: '8.5K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=800&q=80', type: 'live' },
+                { id: 'live4', title: 'Al Jazeera English - Live', url: 'https://live-hls-web-aje.getaj.net/AJE/index.m3u8', channel: 'Al Jazeera', views: '45K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80', type: 'live' },
+                { id: 'live5', title: 'France 24 - Español', url: 'https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8', channel: 'France 24', views: '15K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', type: 'live' },
+                { id: 'live6', title: 'Euronews - Español', url: 'https://euronews-es-os-ext-eu.amagi.tv/playlist.m3u8', channel: 'Euronews', views: '10K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1493804714600-6edb1cd9308d?auto=format&fit=crop&w=800&q=80', type: 'live' }
+            ];
+
+            // Nueva lista de servidores ultraconfiables (Cortos animados y Entretenimiento)
+            const fullLengthVideos = [
+                { id: 'v1', title: 'Big Buck Bunny (Corto Animado)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', channel: 'Blender Foundation', views: '24M vistas', time: 'hace 5 años', thumb: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v2', title: 'Elephant Dream (Animación 3D)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', channel: 'Blender Foundation', views: '12M vistas', time: 'hace 6 años', thumb: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v3', title: 'Sintel - Aventura Épica', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', channel: 'Blender Foundation', views: '15M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1577493341514-61011684c4f0?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v4', title: 'Tears of Steel (Sci-Fi Cortometraje)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', channel: 'Blender Foundation', views: '8M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v5', title: 'Aventura 4x4 Extrema en Montaña', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', channel: 'Auto Magazine', views: '6.5M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v6', title: 'Paseo Relajante por la Costa', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', channel: 'Google Media', views: '1.2M vistas', time: 'hace 1 año', thumb: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v7', title: 'Escape Rápido de la Ciudad', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', channel: 'Google Media', views: '2.5M vistas', time: 'hace 2 años', thumb: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v8', title: 'Diversión Pura: Viajes y Rutas', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', channel: 'Google Media', views: '900K vistas', time: 'hace 8 meses', thumb: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v9', title: 'Roadtrip: Un Viaje Increíble', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', channel: 'Google Media', views: '4M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1476820865390-c52aeebb9891?auto=format&fit=crop&w=800&q=80', type: 'online' },
+                { id: 'v10', title: 'Naturaleza: Superando Obstáculos', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', channel: 'Google Media', views: '3.1M vistas', time: 'hace 2 años', thumb: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80', type: 'online' }
+            ];
+            
+            // Mapeamos los videos por defecto para asignarles una categoría
+            videoList = [...liveStreams, ...fullLengthVideos].map(v => ({
+                ...v,
+                category: v.type === 'live' ? 'En Vivo' : 'Recomendados'
+            }));
+            renderHomeGrid();
+        }
+
+        // LÓGICA DE MINIMIZADO
+        function minimizePlayer(e) {
+            if (e) e.stopPropagation();
+            if (isMinimized) return;
+            isMinimized = true;
+            
+            // Extraer el reproductor y ponerlo a flotar en el body
+            document.body.appendChild(playerContainer);
+            
+            // Cambiar estilos al modo Picture in Picture
+            playerContainer.className = 'fixed bottom-4 right-4 w-72 sm:w-80 bg-black rounded-xl overflow-hidden aspect-video z-[100] shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-[#3f3f3f] group transition-all duration-300 hover:scale-105';
+            
+            // Intercambiar botones
+            mainPlayerControls.classList.add('hidden'); // Ocultar botones principales
+            miniControls.classList.remove('hidden');
+            miniClickLayer.classList.remove('hidden');
+
+            // Volver visualmente a la vista de inicio
+            watchView.classList.add('hidden');
+            watchView.classList.remove('lg:flex');
+            homeView.classList.remove('hidden');
+            renderHomeGrid();
+        }
+
+        function maximizePlayer(e) {
+            if (e) e.stopPropagation();
+            if (!isMinimized) return;
+            isMinimized = false;
+
+            // Regresar el reproductor a su contenedor original
+            videoLayoutWrapper.prepend(playerContainer);
+
+            // Restaurar estilos normales
+            playerContainer.className = 'w-full bg-black rounded-xl overflow-hidden aspect-video relative group transition-all duration-300';
+            
+            // Intercambiar botones
+            mainPlayerControls.classList.remove('hidden'); // Mostrar botones principales
+            miniControls.classList.add('hidden');
+            miniClickLayer.classList.add('hidden');
+
+            // Mostrar la vista de reproducción
+            homeView.classList.add('hidden');
+            watchView.classList.remove('hidden');
+            watchView.classList.add('lg:flex');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closePlayer(e) {
+            if (e) e.stopPropagation();
+            
+            // Pausar y limpiar video
+            mainPlayer.pause();
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+            mainPlayer.src = ''; // Limpiar el buffer
+            
+            // Si estaba minimizado, restauramos su posición original en el DOM
+            if (isMinimized) {
+                maximizePlayer();
+            }
+            
+            // Forzar el retorno a casa (el reproductor quedará vacío e inactivo)
+            goHome();
+        }
+
+        function goHome() {
+            // Si el video está reproduciéndose y NO está minimizado, minimizarlo en lugar de pausarlo
+            if (!mainPlayer.paused && !isMinimized && mainPlayer.src) {
+                minimizePlayer();
+            } else {
+                watchView.classList.add('hidden');
+                watchView.classList.remove('lg:flex');
+                homeView.classList.remove('hidden');
+                
+                // Si no está minimizado y está abierto, asegurar que se detenga
+                if (!isMinimized) {
+                    mainPlayer.pause();
+                }
+                
+                // Limpiar la barra de búsqueda al volver al inicio
+                document.getElementById('search-input').value = '';
+                renderHomeGrid();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Renderizar cuadrícula principal
+        function renderHomeGrid(videosToRender = videoList) {
+            homeView.innerHTML = ''; 
+            
+            if (videosToRender.length === 0) {
+                homeView.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+                        <i data-lucide="search" class="w-16 h-16 mb-4 opacity-30"></i>
+                        <h2 class="text-xl font-bold">No se encontraron resultados</h2>
+                        <p class="mt-2 text-sm">Intenta con otras palabras clave.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // 1. Agrupar videos por categoría
+            const groupedVideos = {};
+            videosToRender.forEach(video => {
+                const cat = video.category || 'Otros';
+                if (!groupedVideos[cat]) groupedVideos[cat] = [];
+                groupedVideos[cat].push(video);
+            });
+
+            // 2. Renderizar cada categoría en su propia sección
+            for (const [category, videos] of Object.entries(groupedVideos)) {
+                
+                const section = document.createElement('div');
+                section.className = 'mb-10 w-full';
+
+                // Definir icono según el tipo de categoría
+                let iconName = 'folder';
+                let iconColor = 'text-green-500';
+                if (category === 'En Vivo') { iconName = 'radio'; iconColor = 'text-red-500'; }
+                else if (category === 'Recomendados') { iconName = 'globe'; iconColor = 'text-blue-500'; }
+
+                // ID seguro para el DOM
+                const safeCatId = category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '-');
+
+                section.innerHTML = `
+                    <div class="flex items-center gap-2 mb-4 px-2 border-b border-[#272727] pb-2">
+                        <i data-lucide="${iconName}" class="w-6 h-6 ${iconColor}"></i>
+                        <h2 class="text-xl md:text-2xl font-bold capitalize tracking-tight">${category}</h2>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8" id="grid-${safeCatId}">
+                    </div>
+                `;
+                homeView.appendChild(section);
+
+                const gridContainer = section.querySelector(`#grid-${safeCatId}`);
+
+                // 3. Renderizar las tarjetas dentro de su respectiva categoría
+                videos.forEach(video => {
+                    const card = document.createElement('div');
+                    const isOnline = video.type === 'online';
+                    const isLive = video.type === 'live';
+                    const isLocal = video.type === 'local';
+                    
+                    card.className = 'flex flex-col gap-2 cursor-pointer group relative';
+                    card.onclick = () => playVideo(video);
+
+                    // Diferenciar miniatura según si es online o local (con imagen de respaldo en caso de error)
+                    const thumbHTML = (isOnline || isLive) && video.thumb
+                        ? `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">`
+                        : `<video class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" preload="metadata" muted><source src="${video.url}"></video>`;
+
+                    // Etiqueta de Origen
+                    let badgeHTML = '';
+                    if (isLive) {
+                        badgeHTML = `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10 flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> EN VIVO</span>`;
+                    } else {
+                        badgeHTML = `<span class="absolute top-2 left-2 ${isOnline ? 'bg-blue-600' : 'bg-green-600'} text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10">${isOnline ? 'Online' : 'Local'}</span>`;
+                    }
+                    
+                    // Icono
+                    let cardIconName = 'folder';
+                    let cardIconColor = 'bg-green-800';
+                    if (isOnline) { cardIconName = 'globe'; cardIconColor = 'bg-blue-800'; }
+                    if (isLive) { cardIconName = 'radio'; cardIconColor = 'bg-red-800'; }
+
+                    card.innerHTML = `
+                        <div class="w-full aspect-video bg-[#272727] rounded-xl overflow-hidden relative shadow-lg">
+                            ${badgeHTML}
+                            ${thumbHTML}
+                            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-medium shadow">►</span>
+                        </div>
+                        <div class="flex gap-3 mt-2 pr-4">
+                            <div class="w-9 h-9 rounded-full flex-shrink-0 mt-1 flex items-center justify-center text-white ${cardIconColor} shadow-md">
+                                <i data-lucide="${cardIconName}" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <h3 class="text-base font-semibold line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors" title="${video.title}">
+                                    ${video.title}
+                                </h3>
+                                <p class="text-sm text-gray-400 mt-1">${video.channel}</p>
+                                <p class="text-xs text-gray-500">${video.views} • ${video.time}</p>
+                            </div>
+                        </div>
+                    `;
+                    gridContainer.appendChild(card);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        // Renderizar lista lateral derecha
+        function renderRecommendations(currentVideoId) {
+            recommendationsContainer.innerHTML = '<h3 class="font-bold text-lg mb-2 lg:hidden">Siguiente</h3>';
+            
+            const recommendations = videoList.filter(v => v.id !== currentVideoId);
+
+            recommendations.forEach(video => {
+                const card = document.createElement('div');
+                const isOnline = video.type === 'online';
+                const isLive = video.type === 'live';
+                
+                card.className = 'flex gap-2 mb-3 cursor-pointer group hover:bg-[#272727] p-1.5 rounded-lg transition-colors relative';
+                card.onclick = () => playVideo(video);
+
+                const thumbHTML = (isOnline || isLive) && video.thumb
+                    ? `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">`
+                    : `<video class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" preload="metadata" muted><source src="${video.url}"></video>`;
+
+                let miniBadge = '';
+                if (isLive) miniBadge = `<span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded font-bold uppercase z-10">VIVO</span>`;
+                else miniBadge = `<span class="absolute top-1 left-1 ${isOnline ? 'bg-blue-600' : 'bg-green-600'} text-white text-[8px] px-1 rounded font-bold uppercase z-10">${isOnline ? 'On' : 'Loc'}</span>`;
+
+                card.innerHTML = `
+                    <div class="w-40 h-24 bg-[#272727] rounded-lg overflow-hidden relative flex-shrink-0">
+                        ${thumbHTML}
+                        ${miniBadge}
+                        <span class="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded z-10">►</span>
+                    </div>
+                    <div class="flex flex-col py-0.5">
+                        <h4 class="text-sm font-semibold line-clamp-2 group-hover:text-blue-400 transition-colors" title="${video.title}">
+                            ${video.title}
+                        </h4>
+                        <p class="text-xs text-gray-400 mt-1">${video.channel}</p>
+                        <p class="text-xs text-gray-400">${video.views}</p>
+                    </div>
+                `;
+                recommendationsContainer.appendChild(card);
+            });
+        }
+
+        // Reproducir video
+        function playVideo(videoObj) {
+            if (isMinimized) {
+                maximizePlayer();
+            }
+
+            homeView.classList.add('hidden');
+            watchView.classList.remove('hidden');
+            watchView.classList.add('lg:flex'); 
+
+            mainPlayer.muted = false;
+            mainPlayer.volume = 1.0;
+            
+            // Destruir instancia previa de HLS si existe para evitar conflictos
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+
+            // Lógica para Transmisiones en Vivo (HLS/.m3u8) vs Videos Normales (MP4)
+            if (videoObj.type === 'live' || videoObj.url.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    hls = new Hls();
+                    hls.loadSource(videoObj.url);
+                    hls.attachMedia(mainPlayer);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        mainPlayer.play().catch(e => console.log("Error de auto-play HLS", e));
+                    });
+                } else if (mainPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Soporte nativo para Safari/iOS
+                    mainPlayer.src = videoObj.url;
+                    mainPlayer.addEventListener('loadedmetadata', function() {
+                        mainPlayer.play().catch(e => console.log("Error de auto-play nativo", e));
+                    });
+                } else {
+                    alert("Tu navegador no soporta transmisiones en vivo HLS.");
+                }
+            } else {
+                // Video normal MP4 o Local
+                mainPlayer.src = videoObj.url;
+                mainPlayer.load();
+                mainPlayer.play().catch(e => console.log("Error de auto-play", e));
+            }
+
+            elTitle.textContent = videoObj.title;
+            elChannel.textContent = videoObj.channel;
+            elViews.textContent = videoObj.views;
+            elDate.textContent = videoObj.time;
+            
+            // --- NUEVO LOGICA DE CANALES DINAMICOS ---
+            if (videoObj.type === 'local') {
+                // Para videos locales: mostrar la carpeta como canal, fondo verde y etiqueta de archivo local
+                elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=166534&color=fff';
+                elChannelSubs.textContent = 'Archivo Local';
+            } else if (videoObj.type === 'live') {
+                // Para vivos: color rojo y etiqueta correspondiente
+                elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=991b1b&color=fff';
+                elChannelSubs.textContent = 'Canal Público • En Vivo';
+            } else {
+                // Para videos de internet (Mozilla, etc.): color azul y etiqueta pública
+                elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=1e40af&color=fff';
+                elChannelSubs.textContent = 'Canal Público';
+            }
+            
+            renderRecommendations(videoObj.id);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Evento al cargar la carpeta (Videos Locales)
+        folderInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const videoFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
+            if (videoFiles.length === 0) {
+                alert('No se encontraron archivos de video.');
+                return;
+            }
+
+            const newVideos = videoFiles.map(file => {
+                // Extraer nombre de la carpeta contenedora para crear la categoría
+                const pathParts = file.webkitRelativePath.split('/');
+                let categoryName = 'Carpeta General';
+                
+                if (pathParts.length >= 3) {
+                    // Si está en una subcarpeta (ej: "Mis Documentos/Series/capitulo1.mp4"), tomamos "Series"
+                    categoryName = pathParts[pathParts.length - 2];
+                } else if (pathParts.length === 2) {
+                    // Si está en la raíz de lo que seleccionaste (ej: "Mis Documentos/video.mp4"), tomamos "Mis Documentos"
+                    categoryName = pathParts[0];
+                }
+
+                return {
+                    id: Math.random().toString(36).substr(2, 9),
+                    title: file.name.replace(/\.[^/.]+$/, ""), 
+                    url: URL.createObjectURL(file), 
+                    channel: categoryName, // Mostrar bajo el título del video 
+                    category: categoryName, // Para organizar el estante/lista
+                    views: 'Archivo Local',
+                    time: 'Recién agregado',
+                    type: 'local'
+                };
+            });
+
+            // Agregamos los videos locales AL PRINCIPIO de la lista
+            videoList = [...newVideos, ...videoList];
+            
+            goHome();
+        });
+
+        // Funcionalidad de Búsqueda
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+
+        function performSearch() {
+            const term = searchInput.value.toLowerCase().trim();
+            
+            // Si estamos reproduciendo algo, lo minimizamos para ver los resultados
+            if (!watchView.classList.contains('hidden')) {
+                minimizePlayer();
+            }
+
+            if (term === '') {
+                renderHomeGrid(); // Si está vacío, mostrar todos
+                return;
+            }
+
+            // Filtrar la lista completa (busca en título, canal y categoría)
+            const filteredVideos = videoList.filter(video => {
+                return video.title.toLowerCase().includes(term) || 
+                       video.channel.toLowerCase().includes(term) ||
+                       video.category.toLowerCase().includes(term);
+            });
+
+            // Para los resultados de búsqueda, los agrupamos en una categoría temporal
+            const searchResults = filteredVideos.map(v => ({...v, category: `Resultados para "${term}"`}));
+            
+            renderHomeGrid(searchResults);
+        }
+
+        // Buscar al presionar la tecla Enter
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // Buscar al hacer clic en el botón de la lupa
+        searchBtn.addEventListener('click', performSearch);
+
+
+        // Iniciar aplicación cargando la API
+        loadOnlineVideos();
+
+    </script>
+</body>
+</html>
