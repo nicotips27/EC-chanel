@@ -66,6 +66,22 @@
         <h1 class="text-2xl font-bold mt-4 tracking-wider">EC CHANEL</h1>
     </div>
 
+    <!-- NOTIFICACIÓN BETA (Aparece al entrar) -->
+    <div id="beta-notification" class="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500">
+        <div id="beta-modal-content" class="bg-[#181818] border border-[#3f3f3f] rounded-2xl p-6 md:p-8 max-w-sm w-[90%] mx-auto flex flex-col items-center text-center transform scale-95 transition-transform duration-500 shadow-2xl">
+            <img src="https://64.media.tumblr.com/41112a0715a6f0ee21a5f8085d1e8360/92ca988c324cf05b-7f/s540x810/ec56462ae29eeb37253fbaa6435e6fc252e8f3e6.pnj" 
+                 alt="Warning Icon" 
+                 class="w-28 h-28 mb-4 object-contain drop-shadow-lg">
+            <h2 class="text-2xl font-bold text-white mb-2 tracking-tight">¡Aviso de Beta!</h2>
+            <p class="text-sm text-gray-400 mb-6">
+                Este sitio se encuentra actualmente en fase beta de desarrollo. Algunas funciones podrían ser inestables o estar sujetas a cambios repentinos.
+            </p>
+            <button onclick="closeBetaNotification()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-full w-full transition-colors shadow-lg shadow-red-900/50">
+                Entendido
+            </button>
+        </div>
+    </div>
+
     <!-- NAVEGACIÓN SUPERIOR -->
     <header class="flex items-center justify-between px-4 py-2 h-16 bg-[#0f0f0f] sticky top-0 z-40 border-b border-[#272727]">
         <!-- Logo y Menú -->
@@ -156,10 +172,15 @@
                     
                     <!-- CONTENEDOR DEL REPRODUCTOR (Movible para minimizar) -->
                     <div id="player-container" class="w-full bg-black rounded-xl overflow-hidden aspect-video relative group transition-all duration-300">
+                        
+                        <!-- REPRODUCTOR NATIVO (Archivos locales / M3U8 libres) -->
                         <video id="main-player" class="w-full h-full object-contain" controls>
                             <source src="" type="video/mp4">
                             Tu navegador no soporta el formato de video.
                         </video>
+
+                        <!-- REPRODUCTOR YOUTUBE (Canales de TV Protegidos) -->
+                        <iframe id="youtube-player" class="w-full h-full hidden" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         
                         <!-- Botones principales (solo en modo expandido) -->
                         <div id="main-player-controls" class="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -249,21 +270,43 @@
         // Inicializar iconos de Lucide
         lucide.createIcons();
 
-        // Lógica de la Pantalla de Carga
+        // Lógica de la Pantalla de Carga y Notificación Beta
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loading-screen');
                 loadingScreen.classList.add('fade-out');
                 setTimeout(() => {
                     loadingScreen.style.display = 'none';
+                    
+                    // Mostrar notificación beta después de que se oculta la pantalla de carga
+                    setTimeout(() => {
+                        const betaNotif = document.getElementById('beta-notification');
+                        const betaContent = document.getElementById('beta-modal-content');
+                        betaNotif.classList.remove('opacity-0', 'pointer-events-none');
+                        betaNotif.classList.add('opacity-100', 'pointer-events-auto');
+                        betaContent.classList.remove('scale-95');
+                        betaContent.classList.add('scale-100');
+                    }, 300);
+                    
                 }, 500);
             }, 2500);
         });
 
+        // Función para cerrar la notificación Beta
+        function closeBetaNotification() {
+            const betaNotif = document.getElementById('beta-notification');
+            const betaContent = document.getElementById('beta-modal-content');
+            
+            betaNotif.classList.remove('opacity-100', 'pointer-events-auto');
+            betaNotif.classList.add('opacity-0', 'pointer-events-none');
+            betaContent.classList.remove('scale-100');
+            betaContent.classList.add('scale-95');
+        }
+
         // Estado de la aplicación
         let videoList = [];
         let isMinimized = false;
-        let hls = null; // Instancia de HLS.js para transmisiones en vivo
+        let hls = null; 
 
         // Referencias del DOM
         const folderInput = document.getElementById('folder-input');
@@ -275,6 +318,7 @@
         const playerContainer = document.getElementById('player-container');
         const videoLayoutWrapper = document.getElementById('video-layout-wrapper');
         const mainPlayer = document.getElementById('main-player');
+        const ytPlayer = document.getElementById('youtube-player'); // <--- NUEVO REPRODUCTOR YOUTUBE
         const mainPlayerControls = document.getElementById('main-player-controls');
         const miniControls = document.getElementById('mini-controls');
         const miniClickLayer = document.getElementById('mini-click-layer');
@@ -289,39 +333,35 @@
 
         // Cargar videos online completos
         async function loadOnlineVideos() {
-            homeView.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div><p>Cargando videos online...</p></div>`;
+            homeView.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div><p>Cargando canales...</p></div>`;
             
-            // Simulamos el tiempo de respuesta de una red
             await new Promise(resolve => setTimeout(resolve, 600));
             
-            // Canales en vivo libres (IPTV público / HLS)
+            // CANALES DE TV - Enlaces M3U8 verificados que NO bloquean (HLS)
             const liveStreams = [
-                { id: 'live1', title: 'NASA TV - Transmisión Oficial', url: 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8', channel: 'NASA', views: '24K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', type: 'live' },
-                { id: 'live2', title: 'Red Bull TV - Deportes', url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8', channel: 'Red Bull', views: '12K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80', type: 'live' },
-                { id: 'live3', title: 'DW Noticias - Español', url: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8', channel: 'DW Español', views: '8.5K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=800&q=80', type: 'live' },
-                { id: 'live4', title: 'Al Jazeera English - Live', url: 'https://live-hls-web-aje.getaj.net/AJE/index.m3u8', channel: 'Al Jazeera', views: '45K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80', type: 'live' },
-                { id: 'live5', title: 'France 24 - Español', url: 'https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8', channel: 'France 24', views: '15K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', type: 'live' },
-                { id: 'live6', title: 'Euronews - Español', url: 'https://euronews-es-os-ext-eu.amagi.tv/playlist.m3u8', channel: 'Euronews', views: '10K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1493804714600-6edb1cd9308d?auto=format&fit=crop&w=800&q=80', type: 'live' }
+                { id: 'live1', title: 'Canal 26 - Noticias', url: 'https://live-video.canal26.com/out/v1/a980992770c04bfda000962dc25e2e92/index.m3u8', channel: 'Canal 26', views: '45K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1493804714600-6edb1cd9308d?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live2', title: 'Crónica TV (Argentina)', url: 'https://unlimited1-us.dps.live/cronica/cronica.smil/playlist.m3u8', channel: 'Crónica TV', views: '35K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live3', title: 'Diputados TV (Argentina)', url: 'https://dtv.cdn.net.ar/dtv/smil:dtv.smil/playlist.m3u8', channel: 'Diputados TV', views: '5K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live4', title: 'CBA24N (Córdoba)', url: 'https://live-01-02-cba.dps.live/cba24n/cba24n.smil/playlist.m3u8', channel: 'CBA24N', views: '12K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live5', title: 'TeleSUR (Latinoamérica)', url: 'https://cdnamd-hls-globecast.akamaized.net/live/ramdisk/telesur-es/hls_sn_high/index.m3u8', channel: 'TeleSUR', views: '50K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live6', title: 'DW Noticias - Español', url: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8', channel: 'DW Español', views: '15K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
+                { id: 'live7', title: 'France 24 - Español', url: 'https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8', channel: 'France 24', views: '20K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' }
             ];
 
-            // Nueva lista de servidores ultraconfiables (Cortos animados y Entretenimiento)
+            // Videos bajo demanda normales
             const fullLengthVideos = [
-                { id: 'v1', title: 'Big Buck Bunny (Corto Animado)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', channel: 'Blender Foundation', views: '24M vistas', time: 'hace 5 años', thumb: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v2', title: 'Elephant Dream (Animación 3D)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', channel: 'Blender Foundation', views: '12M vistas', time: 'hace 6 años', thumb: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v3', title: 'Sintel - Aventura Épica', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', channel: 'Blender Foundation', views: '15M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1577493341514-61011684c4f0?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v4', title: 'Tears of Steel (Sci-Fi Cortometraje)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', channel: 'Blender Foundation', views: '8M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v5', title: 'Aventura 4x4 Extrema en Montaña', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', channel: 'Auto Magazine', views: '6.5M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v6', title: 'Paseo Relajante por la Costa', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', channel: 'Google Media', views: '1.2M vistas', time: 'hace 1 año', thumb: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v7', title: 'Escape Rápido de la Ciudad', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', channel: 'Google Media', views: '2.5M vistas', time: 'hace 2 años', thumb: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v8', title: 'Diversión Pura: Viajes y Rutas', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', channel: 'Google Media', views: '900K vistas', time: 'hace 8 meses', thumb: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v9', title: 'Roadtrip: Un Viaje Increíble', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', channel: 'Google Media', views: '4M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1476820865390-c52aeebb9891?auto=format&fit=crop&w=800&q=80', type: 'online' },
-                { id: 'v10', title: 'Naturaleza: Superando Obstáculos', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', channel: 'Google Media', views: '3.1M vistas', time: 'hace 2 años', thumb: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80', type: 'online' }
+                { id: 'v1', title: 'Big Buck Bunny (Corto Animado)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', channel: 'Blender Foundation', views: '24M vistas', time: 'hace 5 años', thumb: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v2', title: 'Elephant Dream (Animación 3D)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', channel: 'Blender Foundation', views: '12M vistas', time: 'hace 6 años', thumb: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v3', title: 'Sintel - Aventura Épica', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', channel: 'Blender Foundation', views: '15M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1577493341514-61011684c4f0?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v4', title: 'Tears of Steel (Sci-Fi Cortometraje)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', channel: 'Blender Foundation', views: '8M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v5', title: 'Aventura 4x4 Extrema en Montaña', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', channel: 'Auto Magazine', views: '6.5M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v6', title: 'Paseo Relajante por la Costa', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', channel: 'Google Media', views: '1.2M vistas', time: 'hace 1 año', thumb: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' }
             ];
             
-            // Mapeamos los videos por defecto para asignarles una categoría
+            // Mapeamos los videos
             videoList = [...liveStreams, ...fullLengthVideos].map(v => ({
                 ...v,
-                category: v.type === 'live' ? 'En Vivo' : 'Recomendados'
+                category: v.type === 'live' ? 'Noticias en Vivo' : 'Recomendados'
             }));
             renderHomeGrid();
         }
@@ -332,18 +372,16 @@
             if (isMinimized) return;
             isMinimized = true;
             
-            // Extraer el reproductor y ponerlo a flotar en el body
             document.body.appendChild(playerContainer);
-            
-            // Cambiar estilos al modo Picture in Picture
             playerContainer.className = 'fixed bottom-4 right-4 w-72 sm:w-80 bg-black rounded-xl overflow-hidden aspect-video z-[100] shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-[#3f3f3f] group transition-all duration-300 hover:scale-105';
             
-            // Intercambiar botones
-            mainPlayerControls.classList.add('hidden'); // Ocultar botones principales
+            // Evitar que el iframe robe el click en modo minimizado
+            ytPlayer.style.pointerEvents = 'none';
+
+            mainPlayerControls.classList.add('hidden'); 
             miniControls.classList.remove('hidden');
             miniClickLayer.classList.remove('hidden');
 
-            // Volver visualmente a la vista de inicio
             watchView.classList.add('hidden');
             watchView.classList.remove('lg:flex');
             homeView.classList.remove('hidden');
@@ -355,18 +393,16 @@
             if (!isMinimized) return;
             isMinimized = false;
 
-            // Regresar el reproductor a su contenedor original
             videoLayoutWrapper.prepend(playerContainer);
-
-            // Restaurar estilos normales
             playerContainer.className = 'w-full bg-black rounded-xl overflow-hidden aspect-video relative group transition-all duration-300';
             
-            // Intercambiar botones
-            mainPlayerControls.classList.remove('hidden'); // Mostrar botones principales
+            // Devolver interactividad al iframe de YouTube
+            ytPlayer.style.pointerEvents = 'auto';
+
+            mainPlayerControls.classList.remove('hidden');
             miniControls.classList.add('hidden');
             miniClickLayer.classList.add('hidden');
 
-            // Mostrar la vista de reproducción
             homeView.classList.add('hidden');
             watchView.classList.remove('hidden');
             watchView.classList.add('lg:flex');
@@ -376,45 +412,38 @@
         function closePlayer(e) {
             if (e) e.stopPropagation();
             
-            // Pausar y limpiar video
+            // Detener TODO
             mainPlayer.pause();
-            if (hls) {
-                hls.destroy();
-                hls = null;
-            }
-            mainPlayer.src = ''; // Limpiar el buffer
+            if (hls) { hls.destroy(); hls = null; }
+            mainPlayer.src = ''; 
+            ytPlayer.src = ''; // Detener YouTube
             
-            // Si estaba minimizado, restauramos su posición original en el DOM
             if (isMinimized) {
                 maximizePlayer();
             }
             
-            // Forzar el retorno a casa (el reproductor quedará vacío e inactivo)
             goHome();
         }
 
         function goHome() {
-            // Si el video está reproduciéndose y NO está minimizado, minimizarlo en lugar de pausarlo
-            if (!mainPlayer.paused && !isMinimized && mainPlayer.src) {
+            // Si hay un video activo o un iframe de youtube con src, minimizar
+            if (!isMinimized && ( (!mainPlayer.paused && mainPlayer.src) || ytPlayer.src !== '') ) {
                 minimizePlayer();
             } else {
                 watchView.classList.add('hidden');
                 watchView.classList.remove('lg:flex');
                 homeView.classList.remove('hidden');
                 
-                // Si no está minimizado y está abierto, asegurar que se detenga
                 if (!isMinimized) {
                     mainPlayer.pause();
                 }
                 
-                // Limpiar la barra de búsqueda al volver al inicio
                 document.getElementById('search-input').value = '';
                 renderHomeGrid();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
-        // Renderizar cuadrícula principal
         function renderHomeGrid(videosToRender = videoList) {
             homeView.innerHTML = ''; 
             
@@ -423,14 +452,12 @@
                     <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
                         <i data-lucide="search" class="w-16 h-16 mb-4 opacity-30"></i>
                         <h2 class="text-xl font-bold">No se encontraron resultados</h2>
-                        <p class="mt-2 text-sm">Intenta con otras palabras clave.</p>
                     </div>
                 `;
                 lucide.createIcons();
                 return;
             }
 
-            // 1. Agrupar videos por categoría
             const groupedVideos = {};
             videosToRender.forEach(video => {
                 const cat = video.category || 'Otros';
@@ -438,19 +465,15 @@
                 groupedVideos[cat].push(video);
             });
 
-            // 2. Renderizar cada categoría en su propia sección
             for (const [category, videos] of Object.entries(groupedVideos)) {
-                
                 const section = document.createElement('div');
                 section.className = 'mb-10 w-full';
 
-                // Definir icono según el tipo de categoría
                 let iconName = 'folder';
                 let iconColor = 'text-green-500';
-                if (category === 'En Vivo') { iconName = 'radio'; iconColor = 'text-red-500'; }
+                if (category === 'Noticias en Vivo') { iconName = 'radio'; iconColor = 'text-red-500'; }
                 else if (category === 'Recomendados') { iconName = 'globe'; iconColor = 'text-blue-500'; }
 
-                // ID seguro para el DOM
                 const safeCatId = category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '-');
 
                 section.innerHTML = `
@@ -465,22 +488,16 @@
 
                 const gridContainer = section.querySelector(`#grid-${safeCatId}`);
 
-                // 3. Renderizar las tarjetas dentro de su respectiva categoría
                 videos.forEach(video => {
                     const card = document.createElement('div');
                     const isOnline = video.type === 'online';
                     const isLive = video.type === 'live';
-                    const isLocal = video.type === 'local';
                     
                     card.className = 'flex flex-col gap-2 cursor-pointer group relative';
                     card.onclick = () => playVideo(video);
 
-                    // Diferenciar miniatura según si es online o local (con imagen de respaldo en caso de error)
-                    const thumbHTML = (isOnline || isLive) && video.thumb
-                        ? `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">`
-                        : `<video class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" preload="metadata" muted><source src="${video.url}"></video>`;
+                    const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">`;
 
-                    // Etiqueta de Origen
                     let badgeHTML = '';
                     if (isLive) {
                         badgeHTML = `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10 flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> EN VIVO</span>`;
@@ -488,7 +505,6 @@
                         badgeHTML = `<span class="absolute top-2 left-2 ${isOnline ? 'bg-blue-600' : 'bg-green-600'} text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10">${isOnline ? 'Online' : 'Local'}</span>`;
                     }
                     
-                    // Icono
                     let cardIconName = 'folder';
                     let cardIconColor = 'bg-green-800';
                     if (isOnline) { cardIconName = 'globe'; cardIconColor = 'bg-blue-800'; }
@@ -519,10 +535,8 @@
             lucide.createIcons();
         }
 
-        // Renderizar lista lateral derecha
         function renderRecommendations(currentVideoId) {
             recommendationsContainer.innerHTML = '<h3 class="font-bold text-lg mb-2 lg:hidden">Siguiente</h3>';
-            
             const recommendations = videoList.filter(v => v.id !== currentVideoId);
 
             recommendations.forEach(video => {
@@ -533,9 +547,7 @@
                 card.className = 'flex gap-2 mb-3 cursor-pointer group hover:bg-[#272727] p-1.5 rounded-lg transition-colors relative';
                 card.onclick = () => playVideo(video);
 
-                const thumbHTML = (isOnline || isLive) && video.thumb
-                    ? `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">`
-                    : `<video class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" preload="metadata" muted><source src="${video.url}"></video>`;
+                const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">`;
 
                 let miniBadge = '';
                 if (isLive) miniBadge = `<span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded font-bold uppercase z-10">VIVO</span>`;
@@ -559,7 +571,7 @@
             });
         }
 
-        // Reproducir video
+        // LÓGICA DE REPRODUCCIÓN DUAL (Soporta YouTube y Video Nativo)
         function playVideo(videoObj) {
             if (isMinimized) {
                 maximizePlayer();
@@ -569,56 +581,58 @@
             watchView.classList.remove('hidden');
             watchView.classList.add('lg:flex'); 
 
-            mainPlayer.muted = false;
-            mainPlayer.volume = 1.0;
-            
-            // Destruir instancia previa de HLS si existe para evitar conflictos
-            if (hls) {
-                hls.destroy();
-                hls = null;
-            }
+            // RESETEAR AMBOS REPRODUCTORES
+            mainPlayer.pause();
+            mainPlayer.src = '';
+            if (hls) { hls.destroy(); hls = null; }
+            ytPlayer.src = '';
+            ytPlayer.classList.add('hidden');
+            mainPlayer.classList.add('hidden');
 
-            // Lógica para Transmisiones en Vivo (HLS/.m3u8) vs Videos Normales (MP4)
-            if (videoObj.type === 'live' || videoObj.url.includes('.m3u8')) {
-                if (Hls.isSupported()) {
-                    hls = new Hls();
-                    hls.loadSource(videoObj.url);
-                    hls.attachMedia(mainPlayer);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        mainPlayer.play().catch(e => console.log("Error de auto-play HLS", e));
-                    });
-                } else if (mainPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Soporte nativo para Safari/iOS
-                    mainPlayer.src = videoObj.url;
-                    mainPlayer.addEventListener('loadedmetadata', function() {
-                        mainPlayer.play().catch(e => console.log("Error de auto-play nativo", e));
-                    });
-                } else {
-                    alert("Tu navegador no soporta transmisiones en vivo HLS.");
-                }
+            if (videoObj.source === 'youtube') {
+                // MODO YOUTUBE (Evade políticas CORS de los canales oficiales)
+                ytPlayer.classList.remove('hidden');
+                ytPlayer.src = `https://www.youtube.com/embed/live_stream?channel=${videoObj.ytId}&autoplay=1&mute=0&enablejsapi=1`;
             } else {
-                // Video normal MP4 o Local
-                mainPlayer.src = videoObj.url;
-                mainPlayer.load();
-                mainPlayer.play().catch(e => console.log("Error de auto-play", e));
+                // MODO NATIVO (Archivos Locales, MP4 o HLS amigables)
+                mainPlayer.classList.remove('hidden');
+                mainPlayer.muted = false;
+                mainPlayer.volume = 1.0;
+
+                if (videoObj.source === 'hls' || (videoObj.url && videoObj.url.includes('.m3u8'))) {
+                    if (Hls.isSupported()) {
+                        hls = new Hls();
+                        hls.loadSource(videoObj.url);
+                        hls.attachMedia(mainPlayer);
+                        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                            mainPlayer.play().catch(e => console.log("HLS Error", e));
+                        });
+                    } else if (mainPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                        mainPlayer.src = videoObj.url;
+                        mainPlayer.addEventListener('loadedmetadata', function() {
+                            mainPlayer.play().catch(e => console.log("Native HLS Error", e));
+                        });
+                    }
+                } else {
+                    mainPlayer.src = videoObj.url;
+                    mainPlayer.load();
+                    mainPlayer.play().catch(e => console.log("MP4/Local Error", e));
+                }
             }
 
+            // Actualizar interfaz
             elTitle.textContent = videoObj.title;
             elChannel.textContent = videoObj.channel;
             elViews.textContent = videoObj.views;
             elDate.textContent = videoObj.time;
             
-            // --- NUEVO LOGICA DE CANALES DINAMICOS ---
             if (videoObj.type === 'local') {
-                // Para videos locales: mostrar la carpeta como canal, fondo verde y etiqueta de archivo local
                 elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=166534&color=fff';
                 elChannelSubs.textContent = 'Archivo Local';
             } else if (videoObj.type === 'live') {
-                // Para vivos: color rojo y etiqueta correspondiente
                 elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=991b1b&color=fff';
-                elChannelSubs.textContent = 'Canal Público • En Vivo';
+                elChannelSubs.textContent = 'Canal Oficial • En Vivo';
             } else {
-                // Para videos de internet (Mozilla, etc.): color azul y etiqueta pública
                 elChannelAvatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(videoObj.channel) + '&background=1e40af&color=fff';
                 elChannelSubs.textContent = 'Canal Público';
             }
@@ -627,7 +641,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Evento al cargar la carpeta (Videos Locales)
+        // Carga de Archivos Locales
         folderInput.addEventListener('change', (event) => {
             const files = event.target.files;
             if (!files || files.length === 0) return;
@@ -639,76 +653,51 @@
             }
 
             const newVideos = videoFiles.map(file => {
-                // Extraer nombre de la carpeta contenedora para crear la categoría
                 const pathParts = file.webkitRelativePath.split('/');
                 let categoryName = 'Carpeta General';
-                
-                if (pathParts.length >= 3) {
-                    // Si está en una subcarpeta (ej: "Mis Documentos/Series/capitulo1.mp4"), tomamos "Series"
-                    categoryName = pathParts[pathParts.length - 2];
-                } else if (pathParts.length === 2) {
-                    // Si está en la raíz de lo que seleccionaste (ej: "Mis Documentos/video.mp4"), tomamos "Mis Documentos"
-                    categoryName = pathParts[0];
-                }
+                if (pathParts.length >= 3) categoryName = pathParts[pathParts.length - 2];
+                else if (pathParts.length === 2) categoryName = pathParts[0];
 
                 return {
                     id: Math.random().toString(36).substr(2, 9),
                     title: file.name.replace(/\.[^/.]+$/, ""), 
                     url: URL.createObjectURL(file), 
-                    channel: categoryName, // Mostrar bajo el título del video 
-                    category: categoryName, // Para organizar el estante/lista
+                    channel: categoryName,
+                    category: categoryName,
                     views: 'Archivo Local',
                     time: 'Recién agregado',
-                    type: 'local'
+                    type: 'local',
+                    source: 'mp4',
+                    thumb: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'
                 };
             });
 
-            // Agregamos los videos locales AL PRINCIPIO de la lista
             videoList = [...newVideos, ...videoList];
-            
             goHome();
         });
 
-        // Funcionalidad de Búsqueda
+        // Búsqueda
         const searchInput = document.getElementById('search-input');
         const searchBtn = document.getElementById('search-btn');
 
         function performSearch() {
             const term = searchInput.value.toLowerCase().trim();
-            
-            // Si estamos reproduciendo algo, lo minimizamos para ver los resultados
-            if (!watchView.classList.contains('hidden')) {
-                minimizePlayer();
-            }
+            if (!watchView.classList.contains('hidden')) minimizePlayer();
+            if (term === '') { renderHomeGrid(); return; }
 
-            if (term === '') {
-                renderHomeGrid(); // Si está vacío, mostrar todos
-                return;
-            }
-
-            // Filtrar la lista completa (busca en título, canal y categoría)
             const filteredVideos = videoList.filter(video => {
                 return video.title.toLowerCase().includes(term) || 
                        video.channel.toLowerCase().includes(term) ||
                        video.category.toLowerCase().includes(term);
             });
-
-            // Para los resultados de búsqueda, los agrupamos en una categoría temporal
             const searchResults = filteredVideos.map(v => ({...v, category: `Resultados para "${term}"`}));
-            
             renderHomeGrid(searchResults);
         }
 
-        // Buscar al presionar la tecla Enter
-        searchInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') performSearch();
-        });
-
-        // Buscar al hacer clic en el botón de la lupa
+        searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
         searchBtn.addEventListener('click', performSearch);
 
-
-        // Iniciar aplicación cargando la API
+        // Iniciar
         loadOnlineVideos();
 
     </script>
