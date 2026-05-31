@@ -83,10 +83,10 @@
     </div>
 
     <!-- NAVEGACIÓN SUPERIOR -->
-    <header class="flex items-center justify-between px-4 py-2 h-16 bg-[#0f0f0f] sticky top-0 z-40 border-b border-[#272727]">
+    <header class="flex items-center justify-between px-4 py-2 h-16 bg-[#0f0f0f] sticky top-0 z-[50] border-b border-[#272727]">
         <!-- Logo y Menú -->
         <div class="flex items-center gap-4">
-            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors">
+            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors" onclick="toggleMenu()">
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
             <div class="flex items-center gap-1 cursor-pointer" onclick="goHome()">
@@ -129,30 +129,33 @@
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
         
-        <!-- Barra lateral (Desktop) -->
-        <aside class="w-20 lg:w-64 flex-shrink-0 bg-[#0f0f0f] flex flex-col items-center lg:items-stretch py-4 overflow-y-auto hidden sm:flex border-r border-[#272727]">
-            <a href="https://nicotips27.github.io/Estalingrado-corp-Buscador-/" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
-                <i data-lucide="arrow-left" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
-                <span class="text-[10px] lg:text-sm font-medium">Volver</span>
+        <!-- Backdrop para móviles -->
+        <div id="mobile-backdrop" class="fixed inset-0 top-16 bg-black/60 z-30 hidden sm:hidden" onclick="toggleMenu()"></div>
+
+        <!-- Barra lateral (Desktop y Mobile) -->
+        <aside id="sidebar" class="fixed sm:relative top-16 sm:top-0 left-0 h-[calc(100vh-4rem)] sm:h-auto w-64 sm:w-20 lg:w-64 flex-shrink-0 bg-[#0f0f0f] flex flex-col items-stretch sm:items-center lg:items-stretch py-4 overflow-y-auto border-r border-[#272727] z-40 transform -translate-x-full sm:translate-x-0 transition-transform duration-300">
+            <a href="https://nicotips27.github.io/Estalingrado-corp-Buscador-/" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
+                <i data-lucide="arrow-left" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Volver</span>
             </a>
-            <a href="#" onclick="goHome()" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 bg-[#272727]">
-                <i data-lucide="home" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
-                <span class="text-[10px] lg:text-sm font-medium">Inicio</span>
+            <a href="#" onclick="goHome(); toggleMenuIfMobile();" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 bg-[#272727]">
+                <i data-lucide="home" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Inicio</span>
             </a>
-            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
-                <i data-lucide="compass" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
-                <span class="text-[10px] lg:text-sm">Explorar</span>
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
+                <i data-lucide="compass" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Explorar</span>
             </a>
-            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
-                <i data-lucide="play-square" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
-                <span class="text-[10px] lg:text-sm">Suscripciones</span>
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
+                <i data-lucide="play-square" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Suscripciones</span>
             </a>
-            <hr class="border-[#272727] my-3 w-full hidden lg:block">
-            <a href="#" class="flex flex-col lg:flex-row items-center lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2">
-                <i data-lucide="library" class="w-6 h-6 mb-1 lg:mb-0 lg:mr-4"></i>
-                <span class="text-[10px] lg:text-sm">Biblioteca</span>
+            <hr class="border-[#272727] my-3 w-full hidden sm:block">
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
+                <i data-lucide="library" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Biblioteca</span>
             </a>
         </aside>
 
@@ -302,6 +305,25 @@
             betaContent.classList.remove('scale-100');
             betaContent.classList.add('scale-95');
         }
+
+        // --- NUEVAS FUNCIONES PARA EL MENÚ MÓVIL ---
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-backdrop');
+            
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
+        function toggleMenuIfMobile() {
+            if (window.innerWidth < 640) { // Si estamos en resolución móvil
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleMenu(); // Cierra el menú al presionar una opción
+                }
+            }
+        }
+        // -------------------------------------------
 
         // Estado de la aplicación
         let videoList = [];
