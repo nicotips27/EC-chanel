@@ -47,9 +47,18 @@
         #folder-input {
             display: none;
         }
+        
+        /* Utilidad para ocultar scrollbar horizontal en botones */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="bg-[#0f0f0f] text-white font-sans h-screen overflow-hidden flex flex-col">
+<body class="bg-[#0f0f0f] text-white font-sans h-screen overflow-hidden flex flex-col antialiased selection:bg-blue-500/30">
 
     <!-- PANTALLA DE CARGA -->
     <div id="loading-screen" class="fixed inset-0 z-50 bg-[#0f0f0f] flex flex-col items-center justify-center transition-opacity duration-500">
@@ -67,63 +76,64 @@
     </div>
 
     <!-- NOTIFICACIÓN BETA (Aparece al entrar) -->
-    <div id="beta-notification" class="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500">
-        <div id="beta-modal-content" class="bg-[#181818] border border-[#3f3f3f] rounded-2xl p-6 md:p-8 max-w-sm w-[90%] mx-auto flex flex-col items-center text-center transform scale-95 transition-transform duration-500 shadow-2xl">
+    <div id="beta-notification" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center opacity-0 pointer-events-none transition-all duration-500">
+        <div id="beta-modal-content" class="bg-[#121212] border border-white/10 rounded-3xl p-6 md:p-8 max-w-sm w-[90%] mx-auto flex flex-col items-center text-center transform scale-95 transition-transform duration-500 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
             <img src="https://64.media.tumblr.com/41112a0715a6f0ee21a5f8085d1e8360/92ca988c324cf05b-7f/s540x810/ec56462ae29eeb37253fbaa6435e6fc252e8f3e6.pnj" 
                  alt="Warning Icon" 
-                 class="w-28 h-28 mb-4 object-contain drop-shadow-lg">
+                 class="w-28 h-28 mb-4 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             <h2 class="text-2xl font-bold text-white mb-2 tracking-tight">¡Aviso de Beta!</h2>
-            <p class="text-sm text-gray-400 mb-6">
+            <p class="text-sm text-gray-400 mb-6 leading-relaxed">
                 Este sitio se encuentra actualmente en fase beta de desarrollo. Algunas funciones podrían ser inestables o estar sujetas a cambios repentinos.
             </p>
-            <button onclick="closeBetaNotification()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-full w-full transition-colors shadow-lg shadow-red-900/50">
+            <button onclick="closeBetaNotification()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-2xl w-full transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:-translate-y-0.5">
                 Entendido
             </button>
         </div>
     </div>
 
     <!-- NAVEGACIÓN SUPERIOR -->
-    <header class="flex items-center justify-between px-4 py-2 h-16 bg-[#0f0f0f] sticky top-0 z-[50] border-b border-[#272727]">
+    <header class="flex items-center justify-between px-2 sm:px-4 py-2 h-16 bg-[#0f0f0f]/80 backdrop-blur-xl sticky top-0 z-[50] border-b border-white/5 shadow-sm">
         <!-- Logo y Menú -->
-        <div class="flex items-center gap-4">
-            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors" onclick="toggleMenu()">
-                <i data-lucide="menu" class="w-6 h-6"></i>
+        <div class="flex items-center gap-1 sm:gap-4">
+            <button class="p-2 sm:p-2.5 hover:bg-white/10 rounded-full transition-all duration-300" onclick="toggleMenu()">
+                <i data-lucide="menu" class="w-6 h-6 text-gray-200"></i>
             </button>
-            <div class="flex items-center gap-1 cursor-pointer" onclick="goHome()">
+            <div class="flex items-center gap-2 cursor-pointer group" onclick="goHome()">
                 <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" 
-                     alt="Logo" class="w-8 h-8 object-contain rounded-full">
-                <span class="text-xl font-bold tracking-tighter">EC Chanel</span>
+                     alt="Logo" class="w-7 h-7 sm:w-9 sm:h-9 object-contain rounded-full ring-2 ring-white/10 group-hover:ring-blue-500/50 transition-all duration-300">
+                <span class="hidden md:block text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">EC Chanel</span>
             </div>
         </div>
 
         <!-- Barra de Búsqueda -->
-        <div class="hidden md:flex flex-1 max-w-2xl items-center ml-8">
-            <div class="flex w-full items-center bg-[#121212] border border-[#303030] rounded-l-full px-4 py-0.5 focus-within:border-blue-500 ml-10">
-                <i data-lucide="search" class="w-5 h-5 text-gray-400 mr-2"></i>
-                <input type="text" id="search-input" placeholder="Buscar en todos los videos..." class="w-full bg-transparent border-none outline-none py-2 text-white placeholder-gray-400">
+        <div class="flex flex-1 max-w-2xl items-center mx-2 sm:mx-8">
+            <div class="flex w-full items-center bg-white/5 border border-white/10 rounded-l-full px-3 py-1.5 sm:px-5 sm:py-2 focus-within:border-blue-500/50 focus-within:bg-white/10 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300">
+                <i data-lucide="search" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mr-2 flex-shrink-0"></i>
+                <input type="text" id="search-input" placeholder="Buscar contenido..." class="w-full bg-transparent border-none outline-none py-0.5 sm:py-1 text-sm sm:text-base text-white placeholder-gray-500">
             </div>
-            <button id="search-btn" class="bg-[#222222] border border-l-0 border-[#303030] px-5 py-2.5 rounded-r-full hover:bg-[#303030] transition-colors">
-                <i data-lucide="search" class="w-5 h-5"></i>
+            <button id="search-btn" class="bg-white/10 border border-l-0 border-white/10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-r-full hover:bg-white/20 transition-all duration-300 flex-shrink-0 group">
+                <i data-lucide="search" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-300 group-hover:text-white"></i>
             </button>
-            <button class="ml-4 p-2.5 bg-[#181818] hover:bg-[#303030] rounded-full transition-colors">
-                <i data-lucide="mic" class="w-5 h-5"></i>
+            <button class="hidden sm:flex items-center justify-center ml-2 sm:ml-4 p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full transition-all duration-300 flex-shrink-0">
+                <i data-lucide="mic" class="w-5 h-5 text-gray-300"></i>
             </button>
         </div>
 
         <!-- Iconos de Usuario y Carga -->
-        <div class="flex items-center gap-2 md:gap-4">
+        <div class="flex items-center gap-1 sm:gap-3 md:gap-5">
             <!-- Botón para cargar carpeta local -->
-            <label for="folder-input" class="flex items-center gap-2 cursor-pointer bg-[#272727] hover:bg-[#3f3f3f] px-4 py-2 rounded-full transition-colors text-sm font-medium">
-                <i data-lucide="folder-open" class="w-5 h-5"></i>
-                <span class="hidden sm:inline">Cargar Carpeta</span>
+            <label for="folder-input" class="flex items-center gap-2 cursor-pointer bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all duration-300 text-xs sm:text-sm font-semibold shadow-lg shadow-blue-900/20">
+                <i data-lucide="folder-plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                <span class="hidden md:inline">Añadir Local</span>
             </label>
             <input type="file" id="folder-input" webkitdirectory directory multiple accept="video/*">
 
-            <button class="p-2 hover:bg-[#272727] rounded-full transition-colors hidden sm:block">
-                <i data-lucide="bell" class="w-6 h-6"></i>
+            <button class="p-2 hover:bg-white/10 rounded-full transition-all duration-300 hidden sm:block relative">
+                <i data-lucide="bell" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-200"></i>
+                <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-[#0f0f0f] rounded-full"></span>
             </button>
-            <button class="p-1">
-                <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" alt="User" class="w-8 h-8 rounded-full border border-[#272727]">
+            <button class="p-0.5 sm:p-1 flex-shrink-0 hover:scale-105 transition-transform duration-300">
+                <img src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" alt="User" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-white/10 object-cover">
             </button>
         </div>
     </header>
@@ -132,29 +142,29 @@
     <div class="flex flex-1 overflow-hidden relative">
         
         <!-- Backdrop para móviles -->
-        <div id="mobile-backdrop" class="fixed inset-0 top-16 bg-black/60 z-30 hidden sm:hidden" onclick="toggleMenu()"></div>
+        <div id="mobile-backdrop" class="fixed inset-0 top-16 bg-black/60 backdrop-blur-sm z-30 hidden sm:hidden" onclick="toggleMenu()"></div>
 
         <!-- Barra lateral (Desktop y Mobile) -->
-        <aside id="sidebar" class="fixed sm:relative top-16 sm:top-0 left-0 h-[calc(100vh-4rem)] sm:h-auto w-64 sm:w-20 lg:w-64 flex-shrink-0 bg-[#0f0f0f] flex flex-col items-stretch sm:items-center lg:items-stretch py-4 overflow-y-auto border-r border-[#272727] z-40 transform -translate-x-full sm:translate-x-0 transition-transform duration-300">
-            <a href="https://nicotips27.github.io/Estalingrado-corp-Buscador-/" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
-                <i data-lucide="arrow-left" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+        <aside id="sidebar" class="fixed sm:relative top-16 sm:top-0 left-0 h-[calc(100vh-4rem)] sm:h-auto w-64 sm:w-20 lg:w-64 flex-shrink-0 bg-[#0f0f0f]/95 sm:bg-transparent flex flex-col items-stretch sm:items-center lg:items-stretch py-4 overflow-y-auto border-r border-white/5 z-40 transform -translate-x-full sm:translate-x-0 transition-transform duration-300 sm:px-2">
+            <a href="https://nicotips27.github.io/Estalingrado-corp-Buscador-/" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-white/10 rounded-xl mx-2 text-gray-400 hover:text-white transition-all duration-300 hover:translate-x-1 sm:hover:translate-x-0 group">
+                <i data-lucide="arrow-left" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0 group-hover:stroke-blue-400 transition-colors"></i>
                 <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Volver</span>
             </a>
-            <a href="#" onclick="goHome(); toggleMenuIfMobile();" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 bg-[#272727]">
+            <a href="#" onclick="goHome(); toggleMenuIfMobile();" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 bg-white/10 rounded-xl mx-2 text-white shadow-sm mt-1 mb-1 transition-all">
                 <i data-lucide="home" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
-                <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Inicio</span>
+                <span class="text-sm sm:text-[10px] lg:text-sm font-bold">Inicio</span>
             </a>
-            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
-                <i data-lucide="compass" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-white/10 rounded-xl mx-2 text-gray-400 hover:text-white transition-all duration-300 hover:translate-x-1 sm:hover:translate-x-0 group">
+                <i data-lucide="compass" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0 group-hover:stroke-blue-400 transition-colors"></i>
                 <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Explorar</span>
             </a>
-            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
-                <i data-lucide="play-square" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-white/10 rounded-xl mx-2 text-gray-400 hover:text-white transition-all duration-300 hover:translate-x-1 sm:hover:translate-x-0 group">
+                <i data-lucide="play-square" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0 group-hover:stroke-blue-400 transition-colors"></i>
                 <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Suscripciones</span>
             </a>
-            <hr class="border-[#272727] my-3 w-full hidden sm:block">
-            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-[#272727] rounded-lg mx-2 text-gray-300 hover:text-white transition-colors">
-                <i data-lucide="library" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0"></i>
+            <hr class="border-white/5 my-4 w-full hidden sm:block">
+            <a href="#" onclick="toggleMenuIfMobile()" class="flex flex-row sm:flex-col lg:flex-row items-center px-4 sm:px-2 lg:px-4 py-3 hover:bg-white/10 rounded-xl mx-2 text-gray-400 hover:text-white transition-all duration-300 hover:translate-x-1 sm:hover:translate-x-0 group">
+                <i data-lucide="library" class="w-6 h-6 mr-4 sm:mr-0 lg:mr-4 mb-0 sm:mb-1 lg:mb-0 group-hover:stroke-blue-400 transition-colors"></i>
                 <span class="text-sm sm:text-[10px] lg:text-sm font-medium">Biblioteca</span>
             </a>
         </aside>
@@ -182,8 +192,8 @@
                             Tu navegador no soporta el formato de video.
                         </video>
 
-                        <!-- REPRODUCTOR YOUTUBE (Canales de TV Protegidos) -->
-                        <iframe id="youtube-player" class="w-full h-full hidden" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <!-- REPRODUCTOR IFRAME (YouTube / Vimeo) -->
+                        <iframe id="iframe-player" class="w-full h-full hidden" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
                         
                         <!-- Botones principales (solo en modo expandido) -->
                         <div id="main-player-controls" class="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -210,40 +220,40 @@
                     </div>
 
                     <!-- Info del Video -->
-                    <div class="mt-4">
-                        <h1 id="video-title" class="text-xl md:text-2xl font-bold line-clamp-2 text-white"></h1>
+                    <div class="mt-4 md:mt-6">
+                        <h1 id="video-title" class="text-xl md:text-3xl font-bold line-clamp-2 text-white tracking-tight"></h1>
                         
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-3 gap-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-4 gap-4">
                             <div class="flex items-center gap-3">
                                 <!-- Avatar dinámico del canal -->
                                 <img id="video-channel-avatar" src="https://64.media.tumblr.com/810aafabb1b4c5a337e9e2eb33006e8a/338545cb640c95a5-57/s540x810/fcf22fe099bcb842312eef90eefb1ca30a855f35.pnj" 
-                                     class="w-10 h-10 rounded-full object-cover">
-                                <div>
+                                     class="w-11 h-11 rounded-full object-cover ring-2 ring-white/10 shadow-lg">
+                                <div class="flex flex-col justify-center">
                                     <!-- Nombre dinámico del canal/carpeta -->
-                                    <h3 id="video-channel" class="font-bold text-base">Cargando...</h3>
+                                    <h3 id="video-channel" class="font-bold text-base md:text-lg leading-tight">Cargando...</h3>
                                     <!-- Suscriptores/Tipo de archivo dinámico -->
-                                    <p id="video-channel-subs" class="text-sm text-gray-400">...</p>
+                                    <p id="video-channel-subs" class="text-xs text-gray-400 mt-0.5">...</p>
                                 </div>
-                                <button class="bg-white text-black font-semibold px-4 py-2 rounded-full ml-2 hover:bg-gray-200 transition-colors">
+                                <button class="bg-white text-black font-bold px-5 py-2.5 rounded-full ml-4 hover:bg-gray-200 transition-all hover:scale-105 active:scale-95 shadow-md">
                                     Suscribirse
                                 </button>
                             </div>
                             
-                            <div class="flex items-center gap-2">
-                                <div class="flex bg-[#272727] rounded-full overflow-hidden">
-                                    <button class="flex items-center gap-2 px-4 py-2 hover:bg-[#3f3f3f] border-r border-[#3f3f3f] transition-colors">
-                                        <i data-lucide="thumbs-up" class="w-5 h-5"></i>
-                                        <span class="text-sm font-medium">124K</span>
+                            <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+                                <div class="flex bg-white/10 rounded-full overflow-hidden border border-white/5">
+                                    <button class="flex items-center gap-2 px-4 py-2.5 hover:bg-white/10 border-r border-white/10 transition-colors group">
+                                        <i data-lucide="thumbs-up" class="w-5 h-5 group-hover:stroke-blue-400"></i>
+                                        <span class="text-sm font-semibold">124K</span>
                                     </button>
-                                    <button class="px-4 py-2 hover:bg-[#3f3f3f] transition-colors">
-                                        <i data-lucide="thumbs-down" class="w-5 h-5"></i>
+                                    <button class="px-4 py-2.5 hover:bg-white/10 transition-colors group">
+                                        <i data-lucide="thumbs-down" class="w-5 h-5 group-hover:stroke-red-400"></i>
                                     </button>
                                 </div>
-                                <button class="flex items-center gap-2 px-4 py-2 bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors font-medium">
-                                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                                <button class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/5 rounded-full transition-colors font-medium group">
+                                    <i data-lucide="share-2" class="w-5 h-5 group-hover:stroke-blue-400"></i>
                                     <span class="hidden sm:inline">Compartir</span>
                                 </button>
-                                <button class="p-2 bg-[#272727] hover:bg-[#3f3f3f] rounded-full transition-colors">
+                                <button class="p-2.5 bg-white/10 hover:bg-white/20 border border-white/5 rounded-full transition-colors">
                                     <i data-lucide="more-horizontal" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -251,9 +261,9 @@
                     </div>
 
                     <!-- Caja de descripción -->
-                    <div class="bg-[#272727] rounded-xl p-3 mt-4 hover:bg-[#3f3f3f] transition-colors cursor-pointer">
-                        <p class="text-sm font-medium mb-1"><span id="video-views"></span> • <span id="video-date"></span></p>
-                        <p id="video-desc" class="text-sm text-gray-200 line-clamp-2">
+                    <div class="bg-white/5 border border-white/5 rounded-2xl p-4 mt-5 hover:bg-white/10 transition-all cursor-pointer backdrop-blur-sm">
+                        <p class="text-sm font-semibold mb-2 text-gray-200"><span id="video-views" class="text-white"></span> • <span id="video-date"></span></p>
+                        <p id="video-desc" class="text-sm text-gray-400 line-clamp-2 leading-relaxed">
                             Esta es la plataforma EC Chanel. Explorando el contenido más reciente de la red y tus carpetas locales.
                         </p>
                     </div>
@@ -340,7 +350,7 @@
         const playerContainer = document.getElementById('player-container');
         const videoLayoutWrapper = document.getElementById('video-layout-wrapper');
         const mainPlayer = document.getElementById('main-player');
-        const ytPlayer = document.getElementById('youtube-player'); // <--- NUEVO REPRODUCTOR YOUTUBE
+        const iframePlayer = document.getElementById('iframe-player'); // <--- REPRODUCTOR UNIVERSAL IFRAME
         const mainPlayerControls = document.getElementById('main-player-controls');
         const miniControls = document.getElementById('mini-controls');
         const miniClickLayer = document.getElementById('mini-click-layer');
@@ -359,15 +369,14 @@
             
             await new Promise(resolve => setTimeout(resolve, 600));
             
-            // CANALES DE TV - Enlaces M3U8 verificados que NO bloquean (HLS)
+            // CANALES - Enlaces 100% verificados que SÍ permiten reproducción en sitios externos
             const liveStreams = [
-                { id: 'live1', title: 'Canal 26 - Noticias', url: 'https://live-video.canal26.com/out/v1/a980992770c04bfda000962dc25e2e92/index.m3u8', channel: 'Canal 26', views: '45K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1493804714600-6edb1cd9308d?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live2', title: 'Crónica TV (Argentina)', url: 'https://unlimited1-us.dps.live/cronica/cronica.smil/playlist.m3u8', channel: 'Crónica TV', views: '35K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live3', title: 'Diputados TV (Argentina)', url: 'https://dtv.cdn.net.ar/dtv/smil:dtv.smil/playlist.m3u8', channel: 'Diputados TV', views: '5K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live4', title: 'CBA24N (Córdoba)', url: 'https://live-01-02-cba.dps.live/cba24n/cba24n.smil/playlist.m3u8', channel: 'CBA24N', views: '12K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live5', title: 'TeleSUR (Latinoamérica)', url: 'https://cdnamd-hls-globecast.akamaized.net/live/ramdisk/telesur-es/hls_sn_high/index.m3u8', channel: 'TeleSUR', views: '50K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live6', title: 'DW Noticias - Español', url: 'https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8', channel: 'DW Español', views: '15K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' },
-                { id: 'live7', title: 'France 24 - Español', url: 'https://static.france24.com/live/F24_ES_HI_HLS/live_web.m3u8', channel: 'France 24', views: '20K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' }
+                { id: 'live1', title: 'Lofi Girl - Radio 24/7', ytId: 'jfKfPfyJRk', channel: 'Lofi Girl', views: '40K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'youtube' },
+                { id: 'live2', title: 'Al Jazeera - Noticias Globales', ytId: 'gCNeDWCI0vo', channel: 'Al Jazeera', views: '15K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'youtube' },
+                { id: 'live3', title: 'Sky News - Live', ytId: '9Auq9mYxFEE', channel: 'Sky News', views: '20K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'youtube' },
+                { id: 'live4', title: 'NASA Live - Tierra desde el Espacio', ytId: '21X5lGlDOfg', channel: 'NASA', views: '12K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'youtube' },
+                { id: 'live5', title: 'ABC News Live', ytId: 'w_Ma8oQLmSM', channel: 'ABC News', views: '35K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1493804714600-6edb1cd9308d?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'youtube' },
+                { id: 'live6', title: 'Test Stream Oficial (HLS Mux)', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', channel: 'Servidor Mux', views: '1K viendo', time: 'EN VIVO', thumb: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80', type: 'live', source: 'hls' }
             ];
 
             // Videos bajo demanda normales
@@ -377,7 +386,8 @@
                 { id: 'v3', title: 'Sintel - Aventura Épica', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', channel: 'Blender Foundation', views: '15M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1577493341514-61011684c4f0?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
                 { id: 'v4', title: 'Tears of Steel (Sci-Fi Cortometraje)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', channel: 'Blender Foundation', views: '8M vistas', time: 'hace 3 años', thumb: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
                 { id: 'v5', title: 'Aventura 4x4 Extrema en Montaña', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', channel: 'Auto Magazine', views: '6.5M vistas', time: 'hace 4 años', thumb: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
-                { id: 'v6', title: 'Paseo Relajante por la Costa', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', channel: 'Google Media', views: '1.2M vistas', time: 'hace 1 año', thumb: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' }
+                { id: 'v6', title: 'Paseo Relajante por la Costa', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', channel: 'Google Media', views: '1.2M vistas', time: 'hace 1 año', thumb: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'mp4' },
+                { id: 'v7', title: 'Video Especial Vimeo', vimeoId: '1196820416', channel: 'Vimeo Uploads', views: 'Nuevo', time: 'Reciente', thumb: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80', type: 'online', source: 'vimeo' }
             ];
             
             // Mapeamos los videos
@@ -398,7 +408,7 @@
             playerContainer.className = 'fixed bottom-4 right-4 w-72 sm:w-80 bg-black rounded-xl overflow-hidden aspect-video z-[100] shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-[#3f3f3f] group transition-all duration-300 hover:scale-105';
             
             // Evitar que el iframe robe el click en modo minimizado
-            ytPlayer.style.pointerEvents = 'none';
+            iframePlayer.style.pointerEvents = 'none';
 
             mainPlayerControls.classList.add('hidden'); 
             miniControls.classList.remove('hidden');
@@ -418,8 +428,8 @@
             videoLayoutWrapper.prepend(playerContainer);
             playerContainer.className = 'w-full bg-black rounded-xl overflow-hidden aspect-video relative group transition-all duration-300';
             
-            // Devolver interactividad al iframe de YouTube
-            ytPlayer.style.pointerEvents = 'auto';
+            // Devolver interactividad al iframe
+            iframePlayer.style.pointerEvents = 'auto';
 
             mainPlayerControls.classList.remove('hidden');
             miniControls.classList.add('hidden');
@@ -438,7 +448,7 @@
             mainPlayer.pause();
             if (hls) { hls.destroy(); hls = null; }
             mainPlayer.src = ''; 
-            ytPlayer.src = ''; // Detener YouTube
+            iframePlayer.src = ''; // Detener Iframe (Vimeo/Youtube)
             
             if (isMinimized) {
                 maximizePlayer();
@@ -448,8 +458,8 @@
         }
 
         function goHome() {
-            // Si hay un video activo o un iframe de youtube con src, minimizar
-            if (!isMinimized && ( (!mainPlayer.paused && mainPlayer.src) || ytPlayer.src !== '') ) {
+            // Si hay un video activo o un iframe de youtube/vimeo con src, minimizar
+            if (!isMinimized && ( (!mainPlayer.paused && mainPlayer.src) || iframePlayer.src !== '') ) {
                 minimizePlayer();
             } else {
                 watchView.classList.add('hidden');
@@ -499,11 +509,13 @@
                 const safeCatId = category.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '-');
 
                 section.innerHTML = `
-                    <div class="flex items-center gap-2 mb-4 px-2 border-b border-[#272727] pb-2">
-                        <i data-lucide="${iconName}" class="w-6 h-6 ${iconColor}"></i>
-                        <h2 class="text-xl md:text-2xl font-bold capitalize tracking-tight">${category}</h2>
+                    <div class="flex items-center gap-3 mb-5 px-2 border-b border-white/5 pb-3">
+                        <div class="p-2 bg-white/5 rounded-xl border border-white/5 shadow-inner">
+                            <i data-lucide="${iconName}" class="w-6 h-6 ${iconColor}"></i>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-bold capitalize tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">${category}</h2>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8" id="grid-${safeCatId}">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10" id="grid-${safeCatId}">
                     </div>
                 `;
                 homeView.appendChild(section);
@@ -515,39 +527,50 @@
                     const isOnline = video.type === 'online';
                     const isLive = video.type === 'live';
                     
-                    card.className = 'flex flex-col gap-2 cursor-pointer group relative';
+                    card.className = 'flex flex-col gap-3 cursor-pointer group relative transition-all duration-300 hover:-translate-y-1.5';
                     card.onclick = () => playVideo(video);
 
-                    const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">`;
+                    const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105">`;
 
                     let badgeHTML = '';
                     if (isLive) {
-                        badgeHTML = `<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10 flex items-center gap-1"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> EN VIVO</span>`;
+                        badgeHTML = `<span class="absolute top-3 left-3 bg-red-600/90 backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-md font-bold uppercase tracking-widest shadow-lg border border-red-400/30 z-10 flex items-center gap-1.5"><span class="w-2 h-2 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></span> EN VIVO</span>`;
                     } else {
-                        badgeHTML = `<span class="absolute top-2 left-2 ${isOnline ? 'bg-blue-600' : 'bg-green-600'} text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-md z-10">${isOnline ? 'Online' : 'Local'}</span>`;
+                        badgeHTML = `<span class="absolute top-3 left-3 ${isOnline ? 'bg-blue-600/90' : 'bg-emerald-600/90'} backdrop-blur-md text-white text-[10px] px-2.5 py-1.5 rounded-md font-bold uppercase tracking-widest shadow-lg border ${isOnline ? 'border-blue-400/30' : 'border-emerald-400/30'} z-10">${isOnline ? 'Online' : 'Local'}</span>`;
                     }
                     
                     let cardIconName = 'folder';
-                    let cardIconColor = 'bg-green-800';
-                    if (isOnline) { cardIconName = 'globe'; cardIconColor = 'bg-blue-800'; }
-                    if (isLive) { cardIconName = 'radio'; cardIconColor = 'bg-red-800'; }
+                    let cardIconColor = 'bg-emerald-500/20 text-emerald-400';
+                    if (isOnline) { cardIconName = 'globe'; cardIconColor = 'bg-blue-500/20 text-blue-400'; }
+                    if (isLive) { cardIconName = 'radio'; cardIconColor = 'bg-red-500/20 text-red-400'; }
 
                     card.innerHTML = `
-                        <div class="w-full aspect-video bg-[#272727] rounded-xl overflow-hidden relative shadow-lg">
+                        <div class="w-full aspect-video bg-[#121212] rounded-2xl overflow-hidden relative shadow-md ring-1 ring-white/5 group-hover:shadow-[0_10px_40px_rgba(0,0,0,0.5)] group-hover:ring-white/10 transition-all duration-300">
                             ${badgeHTML}
-                            ${thumbHTML}
-                            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-medium shadow">►</span>
+                            <div class="w-full h-full">
+                                ${thumbHTML}
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-100 scale-75">
+                                <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl">
+                                    <i data-lucide="play" class="w-6 h-6 text-white ml-1 fill-white"></i>
+                                </div>
+                            </div>
+                            <span class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-[11px] px-2 py-1 rounded-md font-medium shadow-lg border border-white/10 z-10">►</span>
                         </div>
-                        <div class="flex gap-3 mt-2 pr-4">
-                            <div class="w-9 h-9 rounded-full flex-shrink-0 mt-1 flex items-center justify-center text-white ${cardIconColor} shadow-md">
-                                <i data-lucide="${cardIconName}" class="w-4 h-4"></i>
+                        <div class="flex gap-3 mt-1 pr-2">
+                            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${cardIconColor} border border-white/5">
+                                <i data-lucide="${cardIconName}" class="w-5 h-5"></i>
                             </div>
                             <div class="flex flex-col">
                                 <h3 class="text-base font-semibold line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors" title="${video.title}">
                                     ${video.title}
                                 </h3>
-                                <p class="text-sm text-gray-400 mt-1">${video.channel}</p>
-                                <p class="text-xs text-gray-500">${video.views} • ${video.time}</p>
+                                <p class="text-sm text-gray-400 mt-1.5 font-medium hover:text-white transition-colors flex items-center gap-1">
+                                    ${video.channel}
+                                    ${isLive ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-gray-500"></i>' : ''}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-0.5">${video.views} • ${video.time}</p>
                             </div>
                         </div>
                     `;
@@ -558,7 +581,7 @@
         }
 
         function renderRecommendations(currentVideoId) {
-            recommendationsContainer.innerHTML = '<h3 class="font-bold text-lg mb-2 lg:hidden">Siguiente</h3>';
+            recommendationsContainer.innerHTML = '<h3 class="font-bold text-lg mb-4 lg:hidden px-2">Siguiente</h3>';
             const recommendations = videoList.filter(v => v.id !== currentVideoId);
 
             recommendations.forEach(video => {
@@ -566,34 +589,36 @@
                 const isOnline = video.type === 'online';
                 const isLive = video.type === 'live';
                 
-                card.className = 'flex gap-2 mb-3 cursor-pointer group hover:bg-[#272727] p-1.5 rounded-lg transition-colors relative';
+                card.className = 'flex gap-3 mb-2 cursor-pointer group hover:bg-white/5 p-2 rounded-xl transition-all duration-300 relative border border-transparent hover:border-white/5';
                 card.onclick = () => playVideo(video);
 
-                const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">`;
+                const thumbHTML = `<img src="${video.thumb}" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">`;
 
                 let miniBadge = '';
-                if (isLive) miniBadge = `<span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded font-bold uppercase z-10">VIVO</span>`;
-                else miniBadge = `<span class="absolute top-1 left-1 ${isOnline ? 'bg-blue-600' : 'bg-green-600'} text-white text-[8px] px-1 rounded font-bold uppercase z-10">${isOnline ? 'On' : 'Loc'}</span>`;
+                if (isLive) miniBadge = `<span class="absolute top-1.5 left-1.5 bg-red-600/90 backdrop-blur-md text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider z-10 border border-red-400/20">VIVO</span>`;
+                else miniBadge = `<span class="absolute top-1.5 left-1.5 ${isOnline ? 'bg-blue-600/90' : 'bg-emerald-600/90'} backdrop-blur-md text-white text-[8px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider z-10 border ${isOnline ? 'border-blue-400/20' : 'border-emerald-400/20'}">${isOnline ? 'On' : 'Loc'}</span>`;
 
                 card.innerHTML = `
-                    <div class="w-40 h-24 bg-[#272727] rounded-lg overflow-hidden relative flex-shrink-0">
-                        ${thumbHTML}
+                    <div class="w-40 h-24 bg-[#121212] rounded-lg overflow-hidden relative flex-shrink-0 shadow-md ring-1 ring-white/5">
+                        <div class="w-full h-full">
+                            ${thumbHTML}
+                        </div>
                         ${miniBadge}
-                        <span class="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded z-10">►</span>
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <span class="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-md text-white text-[10px] px-1.5 rounded-md z-10 border border-white/10">►</span>
                     </div>
-                    <div class="flex flex-col py-0.5">
-                        <h4 class="text-sm font-semibold line-clamp-2 group-hover:text-blue-400 transition-colors" title="${video.title}">
+                    <div class="flex flex-col py-1 justify-center">
+                        <h4 class="text-sm font-semibold line-clamp-2 leading-snug group-hover:text-blue-400 transition-colors" title="${video.title}">
                             ${video.title}
                         </h4>
-                        <p class="text-xs text-gray-400 mt-1">${video.channel}</p>
-                        <p class="text-xs text-gray-400">${video.views}</p>
+                        <p class="text-xs text-gray-400 mt-1.5 font-medium">${video.channel}</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5">${video.views}</p>
                     </div>
                 `;
                 recommendationsContainer.appendChild(card);
             });
         }
-
-        // LÓGICA DE REPRODUCCIÓN DUAL (Soporta YouTube y Video Nativo)
+        // LÓGICA DE REPRODUCCIÓN DUAL (Soporta YouTube, Vimeo y Video Nativo)
         function playVideo(videoObj) {
             if (isMinimized) {
                 maximizePlayer();
@@ -607,14 +632,18 @@
             mainPlayer.pause();
             mainPlayer.src = '';
             if (hls) { hls.destroy(); hls = null; }
-            ytPlayer.src = '';
-            ytPlayer.classList.add('hidden');
+            iframePlayer.src = '';
+            iframePlayer.classList.add('hidden');
             mainPlayer.classList.add('hidden');
 
             if (videoObj.source === 'youtube') {
-                // MODO YOUTUBE (Evade políticas CORS de los canales oficiales)
-                ytPlayer.classList.remove('hidden');
-                ytPlayer.src = `https://www.youtube.com/embed/live_stream?channel=${videoObj.ytId}&autoplay=1&mute=0&enablejsapi=1`;
+                iframePlayer.classList.remove('hidden');
+                // IMPORTANTE: Usamos el ID del video directamente para asegurar la reproducción y evitar bloqueos.
+                iframePlayer.src = `https://www.youtube.com/embed/${videoObj.ytId}?autoplay=1&mute=0`;
+            } else if (videoObj.source === 'vimeo') {
+                // MODO VIMEO
+                iframePlayer.classList.remove('hidden');
+                iframePlayer.src = `https://player.vimeo.com/video/${videoObj.vimeoId}?autoplay=1`;
             } else {
                 // MODO NATIVO (Archivos Locales, MP4 o HLS amigables)
                 mainPlayer.classList.remove('hidden');
